@@ -17,20 +17,20 @@ namespace DatingAppCore3.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController] //this attribute enable validations using attributes on DTO Class
-    public class AuthController:ControllerBase
+    public class AuthController : ControllerBase
     {
         private readonly IAuthRepository _repo;
         private readonly IConfiguration _config;
 
-        public AuthController(IAuthRepository repo,IConfiguration config)
+        public AuthController(IAuthRepository repo, IConfiguration config)
         {
             _repo = repo;
-          _config = config;
+            _config = config;
         }
 
         [HttpPost("Register")]
 
-        public async  Task<IActionResult> Register( UserForRegisterDto userForRegister)
+        public async Task<IActionResult> Register(UserForRegisterDto userForRegister)
         {
             //We Dont need to validate model state if use [APIController]
             //Validate Request
@@ -47,46 +47,50 @@ namespace DatingAppCore3.API.Controllers
                 UserName = userForRegister.UserName
             };
 
-            var createdUser = await _repo.Register(userToCreate,userForRegister.Password);
+            var createdUser = await _repo.Register(userToCreate, userForRegister.Password);
 
             // return CreatedAtRouteResult();
             return StatusCode(201);
 
         }
-    
+
         [HttpPost("Login")]
         public async Task<IActionResult> Login(UserForLoginDto userForLoginDto)
         {
-            var userFromRepo = await _repo.Login(userForLoginDto.UserName, userForLoginDto.Password);
-            if (userFromRepo == null)
-            {
-                return Unauthorized();
+           var userFromRepo = await _repo.Login(userForLoginDto.UserName, userForLoginDto.Password);
+                if (userFromRepo == null)
+                {
+                    return Unauthorized();
 
-            }
+                }
 
-            var claims = new[]
-            {
+                var claims = new[]
+                {
                 new Claim(ClaimTypes.NameIdentifier,userFromRepo.Id.ToString()),
                 new Claim(ClaimTypes.Name, userFromRepo.UserName)
             };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config.GetSection("AppSettings:Token").Value));
-            var creds = new SigningCredentials(key,SecurityAlgorithms.HmacSha512Signature);
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config.GetSection("AppSettings:Token").Value));
+                var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
 
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.Now.AddDays(1),
-                SigningCredentials = creds
-            };
+                var tokenDescriptor = new SecurityTokenDescriptor
+                {
+                    Subject = new ClaimsIdentity(claims),
+                    Expires = DateTime.Now.AddDays(1),
+                    SigningCredentials = creds
+                };
 
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var token = tokenHandler.CreateToken(tokenDescriptor);
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var token = tokenHandler.CreateToken(tokenDescriptor);
 
-            return Ok(new {
+                return Ok(new
+                {
 
-                token = tokenHandler.WriteToken(token)
-            }); 
+                    token = tokenHandler.WriteToken(token)
+                });
+
+            
+           
         }
     }
 }
