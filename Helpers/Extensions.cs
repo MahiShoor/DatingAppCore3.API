@@ -16,5 +16,16 @@ namespace DatingAppCore3.API.Helpers
             response.Headers.Add("Acccess-Control-Allow-Origin", "*");
 
         }
+
+        public static int CaculateAge(this DateTime dateTime)
+        {
+            var age = DateTime.Today.Year - dateTime.Year;
+            if(dateTime.AddYears(age)> DateTime.Today)
+            {
+                age--;
+            }
+            return age;
+
+        }
     }
 }

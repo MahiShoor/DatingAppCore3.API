@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using AutoMapper;
 using DatingApp.API.Data;
 using DatingAppCore3.API.Data;
 using DatingAppCore3.API.Helpers;
@@ -36,12 +37,18 @@ namespace DatingAppCore3.API
         //In this method ordering is not so important
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
-           
-           services.AddDbContextPool<DataContext>(x => x.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
-            services.AddCors();
-            services.AddScoped<IAuthRepository, AuthRepository>();
+            services.AddControllers().AddNewtonsoftJson(opt =>
+            {
+                opt.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+            }
+            );
 
+            services.AddDbContextPool<DataContext>(x => x.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+            services.AddCors();
+            services.AddAutoMapper(typeof (DatingRepository).Assembly);
+       
+            services.AddScoped<IAuthRepository, AuthRepository>();
+            services.AddScoped<IDatingRepository, DatingRepository>();
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
