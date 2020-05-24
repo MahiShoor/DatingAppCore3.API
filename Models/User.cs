@@ -1,3 +1,4 @@
+using DatingAppCore3.API.Models;
 using System;
 using System.Collections.Generic;
 
@@ -25,6 +26,12 @@ public byte[] PasswordHash { get; set; }
 
         public ICollection<Photo> Photos { get; set; }
 
+        public ICollection<Like> Likers { get; set; }
+        public ICollection<Like> Likees { get; set; }
+
+        public ICollection<Message> MessagesSent { get; set; }
+
+        public ICollection<Message> MessagesReceived { get; set; }
 
     }
 }
