@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace DatingAppCore3.API.Controllers
 {
-    [Authorize]
+
     [Route("api/users/{userId}/photos")]
     [ApiController]
     public class PhotosController : ControllerBase
@@ -57,7 +57,7 @@ namespace DatingAppCore3.API.Controllers
             if (userId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
                 return Unauthorized();
              
-            var userFromRepo = await _repo.GetUser(userId);
+            var userFromRepo = await _repo.GetUser(userId,true);
 
             var file = photoForCretionDto.File;
 
@@ -110,7 +110,7 @@ namespace DatingAppCore3.API.Controllers
             if (userId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
                 return Unauthorized();
 
-            var user = await _repo.GetUser(userId);
+            var user = await _repo.GetUser(userId,true);
 
             if (!user.Photos.Any(p => p.Id == id))
                 return Unauthorized();
@@ -141,7 +141,7 @@ namespace DatingAppCore3.API.Controllers
             if (userId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
                 return Unauthorized();
 
-            var user = await _repo.GetUser(userId);
+            var user = await _repo.GetUser(userId,true);
 
             if (!user.Photos.Any(p => p.Id == id))
                 return Unauthorized();

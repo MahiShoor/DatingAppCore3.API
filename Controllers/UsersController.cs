@@ -16,7 +16,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace DatingAppCore3.API.Controllers
 {
     [ServiceFilter (typeof(LogUserActivity))]
-    [Authorize]
+
     [Route("api/[controller]")]
     [ApiController]
     public class UsersController : ControllerBase
@@ -36,8 +36,9 @@ namespace DatingAppCore3.API.Controllers
            
 
             var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+           
 
-            var userFromRepo = await _repo.GetUser(currentUserId);
+            var userFromRepo = await _repo.GetUser(currentUserId,true);
 
             userParams.UserId = currentUserId;
 
@@ -55,7 +56,8 @@ namespace DatingAppCore3.API.Controllers
         [HttpGet("{id}" , Name = "GetUser")]
         public async Task<IActionResult>GetUser(int id)
         {
-            var user = await _repo.GetUser(id);
+            var isCurrentUser = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value) == id;
+            var user = await _repo.GetUser(id, isCurrentUser);
 
             var userToReturn = _mapper.Map<UserForDetailedDto>(user);
 
@@ -70,8 +72,8 @@ namespace DatingAppCore3.API.Controllers
             // If user id does not match  with user id from token then return UnAuthorize
             if (id != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
                 return Unauthorized();
-
-            var userFromRepo = await _repo.GetUser(id);
+            var isCurrentUser = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value) == id;
+            var userFromRepo = await _repo.GetUser(id, isCurrentUser);
 
             _mapper.Map(userForUpdateDto, userFromRepo);
 
@@ -93,8 +95,8 @@ namespace DatingAppCore3.API.Controllers
             {
                 return BadRequest("You already liked the user");
             }
-
-            if (await _repo.GetUser(recipientId) == null)
+        
+            if (await _repo.GetUser(recipientId,true) == null)
             {
                 return NotFound();
             }

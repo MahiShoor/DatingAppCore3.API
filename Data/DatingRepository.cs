@@ -37,19 +37,28 @@ namespace DatingAppCore3.API.Data
 
         public  async Task<Photo> GetMainPhotoForUser(int userId)
         {
+
             return await _context.Photos.Where(u => u.UserId == userId).FirstOrDefaultAsync(p => p.IsMain);
         }
 
         public async Task<Photo> GetPhoto(int id)
         {
-            var photo = await _context.Photos.FirstOrDefaultAsync(p => p.Id == id);
+            var photo = await _context.Photos.IgnoreQueryFilters().
+                FirstOrDefaultAsync(p => p.Id == id);
 
             return photo;
         }
 
-        public async Task<User> GetUser(int id)
+        public async Task<User> GetUser(int id, bool isCurrentUser)
         {
-            var user = await _context.Users.Include(p => p.Photos)
+            //var user = await _context.Users.Include(p => p.Photos)
+            //   .FirstOrDefaultAsync(u => u.Id == id);
+            //return user;
+            var query = _context.Users.Include(p => p.Photos).AsQueryable();
+            if (isCurrentUser)          
+                query = query.IgnoreQueryFilters();
+            
+            var user = await _context.Users
                .FirstOrDefaultAsync(u => u.Id == id);
             return user;
             //throw new NotImplementedException();
@@ -57,7 +66,9 @@ namespace DatingAppCore3.API.Data
 
         public async Task<PagedList<User>> GetUsers(UserParams userParams)
         {
-            var users =  _context.Users.Include(p => p.Photos).OrderByDescending(u => u.LastActive).AsQueryable();
+            //removing Include because we used lazy loading proxies 
+            //var users =  _context.Users.Include(p => p.Photos).OrderByDescending(u => u.LastActive).AsQueryable();
+            var users = _context.Users.OrderByDescending(u => u.LastActive).AsQueryable();
             users = users.Where(u => u.Id != userParams.UserId);
             users = users.Where(u => u.Gender == userParams.Gender);
 
@@ -100,8 +111,10 @@ namespace DatingAppCore3.API.Data
 
         private async Task<IEnumerable<int>> GetUserLikes(int id, bool likers)
         {
-            var user = await _context.Users.Include(x => x.Likers).
-                Include(x => x.Likees).FirstOrDefaultAsync(u => u.Id == id);
+            //removing Include because we used lazy loading proxies 
+            //var user = await _context.Users.Include(x => x.Likers).
+            //    Include(x => x.Likees).FirstOrDefaultAsync(u => u.Id == id);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
 
             if (likers)
             {
@@ -126,9 +139,10 @@ namespace DatingAppCore3.API.Data
 
         public  async Task<PagedList<Message>> GetMessagesForUser(MessageParams messageParams)
         {
-            var messages = _context.Messages.Include(u => u.Sender).ThenInclude(p => p.Photos)
-                .Include(u => u.Recipient).ThenInclude(p => p.Photos).AsQueryable();
-
+            //Removed Include  because used lazyloading
+            //var messages = _context.Messages.Include(u => u.Sender).ThenInclude(p => p.Photos)
+            //    .Include(u => u.Recipient).ThenInclude(p => p.Photos).AsQueryable();
+            var messages = _context.Messages.AsQueryable();
             switch (messageParams.MessageContainer)
             {
                 case "Inbox":
@@ -152,10 +166,16 @@ namespace DatingAppCore3.API.Data
 
         public async Task<IEnumerable<Message>> GetMessageThread(int userId, int recipientId)
         {
-            var messages =await _context.Messages.Include(u => u.Sender).ThenInclude(p => p.Photos)
-              .Include(u => u.Recipient).ThenInclude(p => p.Photos)
-              .Where(m => m.RecipientId == userId && m.SenderId == recipientId && m.Deleted== false
-              || m.RecipientId == recipientId && m.SenderId == userId && m.SenderDeleted==false)
+            // removed include as we used lazy loading 
+            //var messages =await _context.Messages.Include(u => u.Sender).ThenInclude(p => p.Photos)
+            //  .Include(u => u.Recipient).ThenInclude(p => p.Photos)
+            //  .Where(m => m.RecipientId == userId && m.SenderId == recipientId && m.Deleted== false
+            //  || m.RecipientId == recipientId && m.SenderId == userId && m.SenderDeleted==false)
+            //  .OrderByDescending(m => m.MassageSent)
+            //  .ToListAsync();
+            var messages = await _context.Messages
+              .Where(m => m.RecipientId == userId && m.SenderId == recipientId && m.Deleted == false
+              || m.RecipientId == recipientId && m.SenderId == userId && m.SenderDeleted == false)
               .OrderByDescending(m => m.MassageSent)
               .ToListAsync();
 

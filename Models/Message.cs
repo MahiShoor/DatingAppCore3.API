@@ -15,9 +15,9 @@ namespace DatingAppCore3.API.Models
 
         public int RecipientId { get; set; }
 
-        public User Sender { get; set; }
+        public virtual User Sender { get; set; }
 
-        public User Recipient { get; set; }
+        public virtual User Recipient { get; set; }
 
         public string Content { get; set; }
 

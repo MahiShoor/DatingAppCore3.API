@@ -1,17 +1,21 @@
 using DatingApp.API.Data;
+using DatingApp.API.Models;
 using DatingAppCore3.API.Data;
+using DatingAppCore3.API.Models;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Threading.Tasks;
 
 namespace DatingAppCore3.API
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task  Main(string[] args)
         {
           var host=  CreateHostBuilder(args).Build();
             using ( var scope = host.Services.CreateScope())
@@ -20,8 +24,11 @@ namespace DatingAppCore3.API
                 try
                 {
                     var context = services.GetRequiredService<DataContext>();
+                    var userManager = services.GetRequiredService<UserManager<User>>();
+                        var roleManager = services.GetRequiredService<RoleManager<Role>>();
                     context.Database.Migrate();
-                    Seed.SeedUsers(context);
+                  await  Seed.SeedUsers(userManager,roleManager);
+                   // Seed.SeedUsers(context);
                 }
                 catch (Exception ex)
                 {
